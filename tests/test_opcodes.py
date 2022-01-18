@@ -75,8 +75,35 @@ class TestCPUOpcodes(unittest.TestCase):
             self.cpu.execute_opcode(opcode)
             mock.assert_called_once_with(opcode)
 
+    ###################
+    # Testing Opcodes #
+    ###################
+
     def test_JMP(self):
-        """ Should test that the method does the correct work """
+        self.cpu.opcode_JMP(0x1234)
+        self.assertEqual(self.cpu.pc, 0x234)
+        self.cpu.opcode_JMP(0x1FF0)
+        self.assertEqual(self.cpu.pc, 0xFF0)
+    
+    def test_CALL(self):
+        self.cpu.opcode_CALL(0x2FFF)
+        self.assertEqual(self.cpu.pc, 0xFFF)
+        self.assertEqual(self.cpu.sp, 1)
+        self.cpu.opcode_CALL(0x2345)
+        self.assertEqual(self.cpu.pc, 0x345)
+        self.assertEqual(self.cpu.sp, 2)
+    
+    def test_RET(self):
+        """ Expects opcode CALL to function correctly """
+        self.cpu.pc = 0x800
+        self.cpu.opcode_CALL(0x25A5)
+        self.cpu.opcode_CALL(0x2EEE)
+        self.cpu.opcode_RET(0x00EE)
+        self.assertEqual(self.cpu.pc, 0x5A5)
+        self.assertEqual(self.cpu.sp, 1)
+        self.cpu.opcode_RET(0x00EE)
+        self.assertEqual(self.cpu.pc, 0x800)
+        self.assertEqual(self.cpu.sp, 0)
 
 if __name__ == '__main__':
     unittest.main()
