@@ -38,7 +38,7 @@ class Emulator:
         self.cpu.load_rom(rom_path)
         self.engine.start()
         self.main_loop()
-    
+
     def main_loop(self) -> None:
         step = 1.0 / self.fps
 
@@ -49,6 +49,7 @@ class Emulator:
             # Do logic
             running = self.engine.update()
             self.cpu.update()
+            self.cpu.renderer.render()
 
             end = time()
             elapsed = end - start
