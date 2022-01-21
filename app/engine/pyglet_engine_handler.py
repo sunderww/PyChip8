@@ -75,6 +75,7 @@ class PygletEngineHandler(EngineHandler):
         self.shapes = []
     
     def draw_rect(self, pos: Vector2, size: Vector2, color: Tuple[int, int, int]) -> None:
+        pos.y = self.window.height - pos.y - size.y
         self.shapes.append(pyglet.shapes.Rectangle(pos.x, pos.y, size.x, size.y, color, self.batch))
 
     def draw(self) -> None:
@@ -97,6 +98,7 @@ class PygletEngineHandler(EngineHandler):
             return False
 
         pyglet.clock.tick()
+        logging.debug("tick")
 
         for window in pyglet.app.windows:
             window.switch_to()
