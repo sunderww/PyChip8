@@ -79,6 +79,11 @@ class TestCPUOpcodes(unittest.TestCase):
     # Testing Opcodes #
     ###################
 
+    def test_CLR(self):
+        self.cpu.renderer.clear_pixels = Mock()
+        self.cpu.opcode_CLR(0x00E0)
+        self.cpu.renderer.clear_pixels.assert_called_once()
+
     def test_JMP(self):
         self.cpu.opcode_JMP(0x1234)
         self.assertEqual(self.cpu.pc, 0x234)
@@ -104,6 +109,18 @@ class TestCPUOpcodes(unittest.TestCase):
         self.cpu.opcode_RET(0x00EE)
         self.assertEqual(self.cpu.pc, 0x800)
         self.assertEqual(self.cpu.sp, 0)
+    
+    def test_SE_byte(self):
+        self.cpu._increment_pc = Mock(wraps=self.cpu._increment_pc)
+        self.cpu.registers[0] = 0x33
+        self.cpu.registers[0xB] = 0x12
+        self.cpu.pc = 0
+        self.cpu.opcode_SE_byte(0x3033)
+        self.assertEqual(self.cpu.pc, self.cpu.PC_INCREMENT_SIZE, "CPU didn't skip next instruction with equal values")
+        self.cpu.pc = 0
+        self.cpu.opcode_SE_byte(0x3BAB)
+        self.assertEqual(self.cpu.pc, 0, "CPU skipped next instruction with non-equal values")
+        self.cpu._increment_pc.assert_called_once()
 
 if __name__ == '__main__':
     unittest.main()

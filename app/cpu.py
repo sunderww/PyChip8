@@ -18,6 +18,8 @@ class StackUnderflowError(CPUError):
 
 
 class CPU:
+    PC_INCREMENT_SIZE = 2
+
     def __init__(self, cycles_per_frame: int, renderer: Renderer, keyboard: Keyboard, speaker: Speaker) -> None:
         self.renderer = renderer
         self.keyboard = keyboard
@@ -76,10 +78,13 @@ class CPU:
             self.speaker.play()
         else:
             self.speaker.stop()
+    
+    def _increment_pc(self) -> None:
+        self.pc += self.PC_INCREMENT_SIZE
         
     def execute_cycle(self) -> None:
-        opcode = int.from_bytes(self.memory[self.pc:self.pc+2], 'big', signed=False)
-        self.pc += 2
+        opcode = int.from_bytes(self.memory[self.pc:self.pc+self.PC_INCREMENT_SIZE], 'big', signed=False)
+        self._increment_pc()
         self.execute_opcode(opcode)
 
     def execute_opcode(self, opcode: int) -> None:
@@ -226,7 +231,7 @@ class CPU:
         reg = (opcode & 0xF00) >> 8
         byte = (opcode & 0xFF)
         if self.registers[reg] == byte:
-            self.pc += 2
+            self._increment_pc()
 
     def opcode_SNE_byte(self, opcode: int) -> None:
         """ 
@@ -236,7 +241,7 @@ class CPU:
         reg = (opcode & 0xF00) >> 8
         byte = (opcode & 0xFF)
         if self.registers[reg] != byte:
-            self.pc += 2
+            self._increment_pc()
 
     def opcode_SE_reg(self, opcode: int) -> None:
         """ 
@@ -246,7 +251,7 @@ class CPU:
         regx = (opcode & 0xF00) >> 8
         regy = (opcode & 0xF0) >> 4
         if self.registers[regx] == self.registers[regy]:
-            self.pc += 2
+            self._increment_pc()
 
     def opcode_LD_byte(self, opcode: int) -> None:
         """ 
@@ -367,7 +372,7 @@ class CPU:
         regx = (opcode & 0xF00) >> 8
         regy = (opcode & 0xF0) >> 4
         if self.registers[regx] != self.registers[regy]:
-            self.pc += 2
+            self._increment_pc()
 
     def opcode_LDI(self, opcode: int) -> None:
         """ 
@@ -425,7 +430,7 @@ class CPU:
         """
         reg = (opcode & 0xF00) >> 8
         if self.keyboard.is_key_pressed(self.registers[reg]):
-            self.pc += 2
+            self._increment_pc()
     
     def opcode_SKNP(self, opcode: int) -> None:
         """ 
@@ -434,7 +439,7 @@ class CPU:
         """
         reg = (opcode & 0xF00) >> 8
         if not self.keyboard.is_key_pressed(self.registers[reg]):
-            self.pc += 2
+            self._increment_pc()
 
     def opcode_LD_dt_in_reg(self, opcode: int) -> None:
         """ 
