@@ -1,3 +1,4 @@
+import logging
 from typing import Mapping, Tuple
 from app.constants import SCREEN_SIZE
 from app.engine.engine_handler import EngineHandler
@@ -24,11 +25,13 @@ class Renderer():
             Note that if pos is not contained in SCREEN_SIZE, this method will wrap it inside
             return True if pixel at pos was erased
         """
+        logging.debug("toggle pixel at pos %s" % pos)
         wrapped_pos = Vector2(pos.x % SCREEN_SIZE.x, pos.y % SCREEN_SIZE.y)
-        self.pixels[wrapped_pos] = not self.pixels[wrapped_pos]
+        self.pixels[wrapped_pos] = not self.pixels.get(wrapped_pos, False)
         return not self.pixels[wrapped_pos]
     
     def render(self) -> None:
+        logging.debug("render()")
         self.engine.clear_window()
         for pos, value in self.pixels.items():
             if value:
