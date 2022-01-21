@@ -114,7 +114,6 @@ class CPU:
             self.opcode_RET(opcode)
         else:
             self.nop(opcode)
-            logging.warning("Ignoring unknown opcode %x" % opcode)
 
     def handle_math_op(self, opcode: int) -> None:
         lookup_table = {
@@ -134,7 +133,6 @@ class CPU:
             lookup_table[lookup_byte](opcode)
         else:
             self.nop(opcode)
-            logging.warning("Ignoring unknown opcode %x" % opcode)
 
     def handle_key_op(self, opcode: int) -> None:
         subop = opcode & 0xFF
@@ -144,7 +142,6 @@ class CPU:
             self.opcode_SKNP(opcode)
         else:
             self.nop(opcode)
-            logging.warning("Ignoring unknown opcode %x" % opcode)
 
     def handle_misc_op(self, opcode: int) -> None:
         lookup_table = {
@@ -175,10 +172,12 @@ class CPU:
     # Opcodes implementations #
     ###########################
     
-    def nop(self, _) -> None:
+    def nop(self, opcode: int) -> None:
         """ For debug purposes """
+        if opcode != 0:
+            logging.debug("Ignoring unknown opcode %x" % opcode)
 
-    def opcode_CLR(self, opcode: int) -> None:
+    def opcode_CLR(self, _: int) -> None:
         """ 
             OpCode 00E0
             Clears the screen. 
@@ -406,13 +405,16 @@ class CPU:
             As described above, VF is set to 1 if any screen pixels are flipped from set to unset when the sprite is drawn, 
             and to 0 if that does not happen
         """
-        x = (opcode & 0xF00) >> 8
-        y = (opcode & 0xF0) >> 4
+        regx = (opcode & 0xF00) >> 8
+        regy = (opcode & 0xF0) >> 4
+        x = self.registers[regx]
+        y = self.registers[regy]
         n = (opcode & 0xF)
-        for i in range(self.i, self.i + n):
-            row = self.memory[i]
+        logging.info("Draw sprite (located at 0x%04x) at pos %d/%d" % (self.i, x, y))
+        for i in range(0, n):
+            row = self.memory[self.i + i]
             for j in range(1, 9):
-                if (row >> j) & 0xF:
+                if (row >> (j-1)) & 0x1:
                     self.renderer.toggle_pixel(Vector2(x+8-j, y+i))
         self.renderer.render()
 
