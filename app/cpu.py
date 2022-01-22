@@ -360,8 +360,8 @@ class CPU:
             The VY register is not used
         """
         regx = (opcode & 0xF00) >> 8
-        self.registers[0xF] = self.registers[regx] & 0x80
-        self.registers[regx] <<= 1
+        self.registers[0xF] = (self.registers[regx] >> 7) & 0x1
+        self.registers[regx] = (self.registers[regx] << 1) & 0xFF
 
 
     def opcode_SNE_reg(self, opcode: int) -> None:

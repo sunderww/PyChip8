@@ -221,12 +221,16 @@ class TestCPUOpcodes(unittest.TestCase):
     def test_SHR(self):
         self.cpu.registers[0xA] = 0b110101
         self.cpu.registers[0x2] = 0x22
+        self.cpu.registers[0x3] = 0b0
         self.cpu.opcode_SHR(0x8A26)
         self.assertEqual(self.cpu.registers[0xA], 0b11010)
         self.assertEqual(self.cpu.registers[0xF], 1)
         self.assertEqual(self.cpu.registers[0x2], 0x22, "Register Y should not be touched in this operation")
         self.cpu.opcode_SHR(0x8A26)
         self.assertEqual(self.cpu.registers[0xA], 0b1101)
+        self.assertEqual(self.cpu.registers[0xF], 0)
+        self.cpu.opcode_SHR(0x83F6)
+        self.assertEqual(self.cpu.registers[0x3], 0)
         self.assertEqual(self.cpu.registers[0xF], 0)
     
     def test_SUBN(self):
@@ -244,6 +248,16 @@ class TestCPUOpcodes(unittest.TestCase):
         self.assertEqual(self.cpu.registers[0xD], 0)
         self.assertEqual(self.cpu.registers[0xF], 1, "Carry flag should have been set")
 
+    def test_SHL(self):
+        self.cpu.registers[0xA] = 0b10101010
+        self.cpu.registers[0x2] = 0x22
+        self.cpu.opcode_SHL(0x8A2E)
+        self.assertEqual(self.cpu.registers[0xA], 0b01010100)
+        self.assertEqual(self.cpu.registers[0xF], 1)
+        self.assertEqual(self.cpu.registers[0x2], 0x22, "Register Y should not be touched in this operation")
+        self.cpu.opcode_SHL(0x8A2E)
+        self.assertEqual(self.cpu.registers[0xA], 0b10101000)
+        self.assertEqual(self.cpu.registers[0xF], 0)
 
 
 if __name__ == '__main__':
