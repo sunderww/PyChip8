@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import Mock, call, patch
 
 from app.cpu import CPU
 from app.engine.pyglet_engine_handler import PygletEngineHandler
@@ -23,7 +23,7 @@ class TestCPUOpcodes(unittest.TestCase):
     
     def test_execute_opcode_with_invalid_opcode(self):
         invalid_opcodes = [0x0000, 0x00EF, 0x8FFA, 0x867F, 0xE19F, 0xEFA2, 0xE000, 0xF808, 0xFA1A, 0xF444, 0xF0E3]
-        self.cpu.nop = MagicMock()
+        self.cpu.nop = Mock()
         for opcode in invalid_opcodes:
             self.cpu.execute_opcode(opcode)
             self.cpu.nop.assert_called_with(opcode)
@@ -31,7 +31,7 @@ class TestCPUOpcodes(unittest.TestCase):
     def test_function_call(self):
         """ Should test that opcodes are calling the correct functions """
         for func_name in self.cpu.get_all_opcodes():
-            setattr(self.cpu, func_name, MagicMock(name=func_name))
+            setattr(self.cpu, func_name, Mock(name=func_name))
         
         calls = {
             0x00E0: self.cpu.opcode_CLR,
@@ -300,7 +300,7 @@ class TestCPUOpcodes(unittest.TestCase):
     # TODO: should add test cases to test the renderer wrapping capability
     def test_DRW(self):
         # You have to use the actual function to test the ability to set VF correctly
-        self.cpu.renderer.toggle_pixel = MagicMock(wraps=self.cpu.renderer.toggle_pixel)
+        self.cpu.renderer.toggle_pixel = Mock(wraps=self.cpu.renderer.toggle_pixel)
         self.cpu.renderer.render = Mock()
         self.cpu.memory[0x900] = 0b11111111
         self.cpu.memory[0x901] = 0b10000001
@@ -339,7 +339,6 @@ class TestCPUOpcodes(unittest.TestCase):
         self.assertEqual(self.cpu.renderer.render.call_count, 2, "renderer.render() should be called only once per DRW call")
         calls = [call(Vector2(self.cpu.registers[9]+x, self.cpu.registers[8])) for x in range(0, 8)]
         self.cpu.renderer.toggle_pixel.assert_has_calls(calls, any_order=True)
-        
 
 
 if __name__ == '__main__':
