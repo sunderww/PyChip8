@@ -121,6 +121,69 @@ class TestCPUOpcodes(unittest.TestCase):
         self.cpu.opcode_SE_byte(0x3BAB)
         self.assertEqual(self.cpu.pc, 0, "CPU skipped next instruction with non-equal values")
         self.cpu._increment_pc.assert_called_once()
+    
+    def test_SNE_byte(self):
+        self.cpu._increment_pc = Mock(wraps=self.cpu._increment_pc)
+        self.cpu.registers[3] = 0xAB
+        self.cpu.registers[4] = 0x44
+        self.cpu.pc = 0
+        self.cpu.opcode_SE_byte(0x4333)
+        self.assertEqual(self.cpu.pc, 0, "CPU skipped next instruction with equal values")
+        self.cpu.pc = 0
+        self.cpu.opcode_SE_byte(0x4444)
+        self.assertEqual(self.cpu.pc, self.cpu.PC_INCREMENT_SIZE, "CPU didn't skip next instruction with non-equal values")
+        self.cpu._increment_pc.assert_called_once()
+    
+    def test_SE_reg(self):
+        self.cpu._increment_pc = Mock(wraps=self.cpu._increment_pc)
+        self.cpu.registers[0x9] = 0x99
+        self.cpu.registers[0xE] = 0x99
+        self.cpu.registers[0xF] = 0xA0
+        self.cpu.pc = 0
+        self.cpu.opcode_SE_reg(0x59E0)
+        self.assertEqual(self.cpu.pc, self.cpu.PC_INCREMENT_SIZE, "CPU didn't skip next inscrutions with equal values")
+        self.cpu.pc = 0
+        self.cpu.opcode_SE_reg(0x5F90)
+        self.assertEqual(self.cpu.pc, 0, "CPU skipped next instruction with non-equal values")
+        self.cpu._increment_pc.assert_called_once()
+    
+    def test_LD_byte(self):
+        self.cpu.opcode_LD_byte(0x629B)
+        self.assertEqual(self.cpu.registers[2], 0x9B)
+    
+    def test_ADD_byte(self):
+        """ Should also check that overflow happens correctly and that carry flag is not set """
+        self.cpu.registers[0x7] = 0x20
+        self.cpu.registers[0xA] = 0xFF
+        self.cpu.opcode_ADD_byte(0x7710)
+        self.assertEqual(self.cpu.registers[0x7], 0x30)
+        self.assertEqual(self.cpu.registers[0xF], 0, "Carry flag should never be set")
+        self.cpu.opcode_ADD_byte(0x7A02)
+        self.assertEqual(self.cpu.registers[0xA], 1)
+        self.assertEqual(self.cpu.registers[0xF], 0, "Carry flag should never be set")
+    
+    def test_LD_reg(self):
+        self.cpu.registers[0x1] = 0x81
+        self.cpu.registers[0xC] = 0xC0
+        self.cpu.opcode_LD_reg(0x81C0)
+        self.assertEqual(self.cpu.registers[1], 0xC0)
+        self.assertEqual(self.cpu.registers[0xC], 0xC0, "Register 0xC should not have changed")
+    
+    def test_OR(self):
+        self.cpu.registers[0x2] = 0b101010
+        self.cpu.registers[0x4] = 0b111010
+        self.cpu.opcode_OR(0x8242)
+        self.assertEqual(self.cpu.registers[0x2], 0b111010)
+        self.assertEqual(self.cpu.registers[0x4], 0b111010, "Register 0x4 should not have changed")
+    
+    def test_AND(self):
+        self.cpu.registers[0x6] = 0b101010
+        self.cpu.registers[0x7] = 0b111001
+        self.cpu.opcode_AND(0x8673)
+        self.assertEqual(self.cpu.registers[0x6], 0b101000)
+        self.assertEqual(self.cpu.registers[0x7], 0b111001, "Register 0x7 should not have changed")
+        
+
 
 if __name__ == '__main__':
     unittest.main()
