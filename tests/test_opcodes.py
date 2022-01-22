@@ -258,6 +258,39 @@ class TestCPUOpcodes(unittest.TestCase):
         self.cpu.opcode_SHL(0x8A2E)
         self.assertEqual(self.cpu.registers[0xA], 0b10101000)
         self.assertEqual(self.cpu.registers[0xF], 0)
+    
+    def test_SNE_reg(self):
+        self.cpu._increment_pc = Mock(wraps=self.cpu._increment_pc)
+        self.cpu.registers[8] = 0x88
+        self.cpu.registers[7] = 0x77
+        self.cpu.registers[0] = 0x88
+        self.cpu.pc = 0
+        self.cpu.opcode_SNE_reg(0x9800)
+        self.assertEqual(self.cpu.pc, 0, "CPU skipped next instruction with equal values")
+        self.cpu.opcode_SNE_reg(0x9870)
+        self.assertEqual(self.cpu.pc, self.cpu.PC_INCREMENT_SIZE, "CPU didn't skip next instruction with non-equal values")
+        self.cpu.opcode_SNE_reg(0x9770)
+        self.assertEqual(self.cpu.pc, self.cpu.PC_INCREMENT_SIZE, "CPU skipped next instruction with equal values")
+        self.cpu._increment_pc.assert_called_once()
+    
+    def test_LDI(self):
+        self.cpu.i = 0x87
+        self.cpu.opcode_LDI(0xA923)
+        self.assertEqual(self.cpu.i, 0x923)
+    
+    def test_JMP_v0(self):
+        self.cpu.pc = 0x33
+        self.cpu.registers[0] = 0xBB
+        self.cpu.opcode_JMP_v0(0xB900)
+        self.assertEqual(self.cpu.pc, 0x9BB)
+        self.cpu.registers[0] = 0
+        self.cpu.opcode_JMP_v0(0xB000)
+        self.assertEqual(self.cpu.pc, 0)
+        # Test the overflow case ; there is no detail on how to handle it in the spec
+        # so consider that no overflow should happen
+        self.cpu.registers[0] = 0xFF
+        self.cpu.opcode_JMP_v0(0xBFFF)
+        self.assertEqual(self.cpu.pc, 0xFFF + 0xFF)
 
 
 if __name__ == '__main__':

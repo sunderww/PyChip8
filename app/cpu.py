@@ -387,9 +387,7 @@ class CPU:
             Jumps to the address NNN plus V0. 
         """
         address = opcode & 0xFFF
-        # Simulate overflow
-        address = (address + self.registers[0]) & 0xFF
-        self.pc = address
+        self.pc = address + self.registers[0]
 
     def opcode_RND(self, opcode: int) -> None:
         """ 
