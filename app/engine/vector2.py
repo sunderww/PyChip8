@@ -24,3 +24,6 @@ class Vector2:
     
     def __str__(self) -> str:
         return "(%d/%d)" % (self.x, self.y)
+    
+    def __repr__(self) -> str:
+        return "Vector2(%d, %d)" % (self.x, self.y)
