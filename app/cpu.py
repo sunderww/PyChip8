@@ -329,7 +329,7 @@ class CPU:
         regx = (opcode & 0xF00) >> 8
         regy = (opcode & 0xF0) >> 4
 
-        self.registers[0xF] = self.registers[regy] > self.registers[regx]
+        self.registers[0xF] = self.registers[regx] >= self.registers[regy]
         self.registers[regx] = (self.registers[regx] - self.registers[regy]) & 0xFF
     
     def opcode_SHR(self, opcode: int) -> None:
@@ -350,7 +350,7 @@ class CPU:
         regx = (opcode & 0xF00) >> 8
         regy = (opcode & 0xF0) >> 4
 
-        self.registers[0xF] = self.registers[regy] > self.registers[regx]
+        self.registers[0xF] = self.registers[regy] >= self.registers[regx]
         self.registers[regx] = (self.registers[regy] - self.registers[regx]) & 0xFF
     
     def opcode_SHL(self, opcode: int) -> None:

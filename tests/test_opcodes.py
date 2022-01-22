@@ -209,14 +209,14 @@ class TestCPUOpcodes(unittest.TestCase):
         self.cpu.registers[0x1] = 0xAA
         self.cpu.opcode_SUB(0x81D5)
         self.assertEqual(self.cpu.registers[1], 0xA)
-        self.assertEqual(self.cpu.registers[0xF], 0, "Carry flag should not have been set")
+        self.assertEqual(self.cpu.registers[0xF], 1, "Carry flag should have been set")
         self.cpu.registers[0x1] = 0xAA
         self.cpu.opcode_SUB(0x8D15)
         self.assertEqual(self.cpu.registers[0xD], 0xFF - (0xA-1))
-        self.assertEqual(self.cpu.registers[0xF], 1, "Carry flag should have been set")
+        self.assertEqual(self.cpu.registers[0xF], 0, "Carry flag should not have been set")
         self.cpu.opcode_SUB(0x8DD5)
         self.assertEqual(self.cpu.registers[0xD], 0)
-        self.assertEqual(self.cpu.registers[0xF], 0, "Carry flag should not have been set")
+        self.assertEqual(self.cpu.registers[0xF], 1, "Carry flag should have been set")
     
     def test_SHR(self):
         self.cpu.registers[0xA] = 0b110101
@@ -228,6 +228,22 @@ class TestCPUOpcodes(unittest.TestCase):
         self.cpu.opcode_SHR(0x8A26)
         self.assertEqual(self.cpu.registers[0xA], 0b1101)
         self.assertEqual(self.cpu.registers[0xF], 0)
+    
+    def test_SUBN(self):
+        """ Also check that the carry flag is set correctly EACH TIME SUBN is called. """
+        self.cpu.registers[0xD] = 0xA0
+        self.cpu.registers[0x1] = 0xAA
+        self.cpu.opcode_SUBN(0x81D7)
+        self.assertEqual(self.cpu.registers[1], 0xFF - (0xA-1))
+        self.assertEqual(self.cpu.registers[0xF], 0, "Carry flag should not have been set")
+        self.cpu.registers[0x1] = 0xAA
+        self.cpu.opcode_SUBN(0x8D17)
+        self.assertEqual(self.cpu.registers[0xD], 0xA)
+        self.assertEqual(self.cpu.registers[0xF], 1, "Carry flag should have been set")
+        self.cpu.opcode_SUBN(0x8DD7)
+        self.assertEqual(self.cpu.registers[0xD], 0)
+        self.assertEqual(self.cpu.registers[0xF], 1, "Carry flag should have been set")
+
 
 
 if __name__ == '__main__':
