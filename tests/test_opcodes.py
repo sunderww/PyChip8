@@ -172,17 +172,62 @@ class TestCPUOpcodes(unittest.TestCase):
     def test_OR(self):
         self.cpu.registers[0x2] = 0b101010
         self.cpu.registers[0x4] = 0b111010
-        self.cpu.opcode_OR(0x8242)
+        self.cpu.opcode_OR(0x8241)
         self.assertEqual(self.cpu.registers[0x2], 0b111010)
         self.assertEqual(self.cpu.registers[0x4], 0b111010, "Register 0x4 should not have changed")
     
     def test_AND(self):
         self.cpu.registers[0x6] = 0b101010
         self.cpu.registers[0x7] = 0b111001
-        self.cpu.opcode_AND(0x8673)
+        self.cpu.opcode_AND(0x8672)
         self.assertEqual(self.cpu.registers[0x6], 0b101000)
         self.assertEqual(self.cpu.registers[0x7], 0b111001, "Register 0x7 should not have changed")
-        
+
+    def test_XOR(self):
+        self.cpu.registers[0x9] = 0b10101011
+        self.cpu.registers[0xB] = 0b01100101
+        self.cpu.opcode_XOR(0x89B3)
+        self.assertEqual(self.cpu.registers[0x9], 0b11001110)
+        self.assertEqual(self.cpu.registers[0xB], 0b01100101, "Register 0xB should not have changed")
+        self.cpu.opcode_XOR(0x8BB3)
+        self.assertEqual(self.cpu.registers[0xB], 0)
+
+    def test_ADD_reg(self):
+        """ Also check that the carry flag is set correctly EACH TIME ADD_reg is called. """
+        self.cpu.registers[0xE] = 0xE6
+        self.cpu.registers[0xC] = 0x20
+        self.cpu.opcode_ADD_reg(0x8EC4)
+        self.assertEqual(self.cpu.registers[0xE], 6)
+        self.assertEqual(self.cpu.registers[0xF], 1, "Carry flag should have been set")
+        self.cpu.opcode_ADD_reg(0x8CC4)
+        self.assertEqual(self.cpu.registers[0xC], 0x40)
+        self.assertEqual(self.cpu.registers[0xF], 0, "Carry flag should not have been set")
+    
+    def test_SUB(self):
+        """ Also check that the carry flag is set correctly EACH TIME SUB is called. """
+        self.cpu.registers[0xD] = 0xA0
+        self.cpu.registers[0x1] = 0xAA
+        self.cpu.opcode_SUB(0x81D5)
+        self.assertEqual(self.cpu.registers[1], 0xA)
+        self.assertEqual(self.cpu.registers[0xF], 0, "Carry flag should not have been set")
+        self.cpu.registers[0x1] = 0xAA
+        self.cpu.opcode_SUB(0x8D15)
+        self.assertEqual(self.cpu.registers[0xD], 0xFF - (0xA-1))
+        self.assertEqual(self.cpu.registers[0xF], 1, "Carry flag should have been set")
+        self.cpu.opcode_SUB(0x8DD5)
+        self.assertEqual(self.cpu.registers[0xD], 0)
+        self.assertEqual(self.cpu.registers[0xF], 0, "Carry flag should not have been set")
+    
+    def test_SHR(self):
+        self.cpu.registers[0xA] = 0b110101
+        self.cpu.registers[0x2] = 0x22
+        self.cpu.opcode_SHR(0x8A26)
+        self.assertEqual(self.cpu.registers[0xA], 0b11010)
+        self.assertEqual(self.cpu.registers[0xF], 1)
+        self.assertEqual(self.cpu.registers[0x2], 0x22, "Register Y should not be touched in this operation")
+        self.cpu.opcode_SHR(0x8A26)
+        self.assertEqual(self.cpu.registers[0xA], 0b1101)
+        self.assertEqual(self.cpu.registers[0xF], 0)
 
 
 if __name__ == '__main__':
