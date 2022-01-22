@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, call, patch
 
 from app.cpu import CPU
 from app.engine.pyglet_engine_handler import PygletEngineHandler
@@ -291,6 +291,55 @@ class TestCPUOpcodes(unittest.TestCase):
         self.cpu.registers[0] = 0xFF
         self.cpu.opcode_JMP_v0(0xBFFF)
         self.assertEqual(self.cpu.pc, 0xFFF + 0xFF)
+    
+    def test_RND(self):
+        with patch('random.randint', return_value=0b10111) as mock_random:
+            self.cpu.opcode_RND(0xC41A) # 0x1A == 26 == 0b11010
+            self.assertEqual(self.cpu.registers[0x4], 0b10010)
+
+    # TODO: should add test cases to test the renderer wrapping capability
+    def test_DRW(self):
+        # You have to use the actual function to test the ability to set VF correctly
+        self.cpu.renderer.toggle_pixel = MagicMock(wraps=self.cpu.renderer.toggle_pixel)
+        self.cpu.renderer.render = Mock()
+        self.cpu.memory[0x900] = 0b11111111
+        self.cpu.memory[0x901] = 0b10000001
+        self.cpu.memory[0x902] = 0b10111101
+        self.cpu.memory[0x903] = 0b10100101
+        self.cpu.memory[0x904] = 0b10111101
+        self.cpu.memory[0x905] = 0b10000001
+        self.cpu.memory[0x906] = 0b11111111
+        self.cpu.registers[9] = 10
+        self.cpu.registers[8] = 11
+        self.cpu.i = 0x900
+        lines = [ # Must correspond to memory
+            [1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 0, 1],
+            [1, 0, 1, 0, 0, 1, 0, 1],
+            [1, 0, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1],
+        ]
+
+        # Test that first DRW set pixel at the correct position
+        self.cpu.opcode_DRW(0xD987)
+        self.assertEqual(self.cpu.registers[0xF], 0, "VF should not be set to 1 after a first call to DRW")
+        self.assertEqual(self.cpu.renderer.render.call_count, 1, "renderer.render() should be called only once per DRW call")
+        calls = []
+        for y in range(0, 7):
+            for x in range(0, 8):
+                if lines[y][x]:
+                    calls.append(call(Vector2(self.cpu.registers[9]+x, self.cpu.registers[8]+y)))
+        self.cpu.renderer.toggle_pixel.assert_has_calls(calls, any_order=True)
+
+        # Test to unset the first line
+        self.cpu.opcode_DRW(0xD981)
+        self.assertEqual(self.cpu.registers[0xF], 1, "VF should be set to 1 after a second call to DRW")
+        self.assertEqual(self.cpu.renderer.render.call_count, 2, "renderer.render() should be called only once per DRW call")
+        calls = [call(Vector2(self.cpu.registers[9]+x, self.cpu.registers[8])) for x in range(0, 8)]
+        self.cpu.renderer.toggle_pixel.assert_has_calls(calls, any_order=True)
+        
 
 
 if __name__ == '__main__':

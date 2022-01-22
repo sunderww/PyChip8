@@ -413,12 +413,18 @@ class CPU:
         x = self.registers[regx]
         y = self.registers[regy]
         n = (opcode & 0xF)
+        set_vf = False
+
         logging.info("Draw sprite (located at 0x%04x) at pos %d/%d" % (self.i, x, y))
         for i in range(0, n):
             row = self.memory[self.i + i]
             for j in range(1, 9):
                 if (row >> (j-1)) & 0x1:
-                    self.renderer.toggle_pixel(Vector2(x+8-j, y+i))
+                    if self.renderer.toggle_pixel(Vector2(x+8-j, y+i)):
+                        set_vf = True
+        
+        if set_vf:
+            self.registers[0xF] = 1
         self.renderer.render()
 
     def opcode_SKP(self, opcode: int) -> None:
