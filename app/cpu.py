@@ -3,6 +3,7 @@ import random
 from typing import Optional
 from app.constants import DEFAULT_SPRITES, MEMORY_PROGRAM_START, MEMORY_SIZE, REGISTER_COUNT, SPRITE_BYTE_SIZE, STACK_SIZE
 from app.engine.vector2 import Vector2
+from app.key import Key
 from app.renderer import Renderer
 from app.keyboard import Keyboard
 from app.speaker import Speaker
@@ -55,8 +56,9 @@ class CPU:
     def update(self) -> None:
         # Special case for OpCode 0xFx0A which requires waiting for input
         if self.wait_for_key_reg is not None:
-            if len(self.keyboard.pressed_keys) > 0:
-                self.registers[self.wait_for_key_reg] = self.keyboard.pressed_keys[0]
+            pressed_key = self.keyboard.get_pressed_key()
+            if pressed_key:
+                self.registers[self.wait_for_key_reg] = pressed_key.value
                 self.wait_for_key_reg = None
             else:
                 return
@@ -433,7 +435,8 @@ class CPU:
             Skips the next instruction if the key stored in VX is pressed. 
         """
         reg = (opcode & 0xF00) >> 8
-        if self.keyboard.is_key_pressed(self.registers[reg]):
+        key: Key = Key(self.registers[reg])
+        if self.keyboard.is_key_pressed(key):
             self._increment_pc()
     
     def opcode_SKNP(self, opcode: int) -> None:
@@ -442,7 +445,8 @@ class CPU:
             Skips the next instruction if the key stored in VX is not pressed.
         """
         reg = (opcode & 0xF00) >> 8
-        if not self.keyboard.is_key_pressed(self.registers[reg]):
+        key: Key = Key(self.registers[reg])
+        if not self.keyboard.is_key_pressed(key):
             self._increment_pc()
 
     def opcode_LD_dt_in_reg(self, opcode: int) -> None:
