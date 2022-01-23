@@ -415,7 +415,7 @@ class CPU:
         n = (opcode & 0xF)
         set_vf = False
 
-        logging.info("Draw sprite (located at 0x%04x) at pos %d/%d" % (self.i, x, y))
+        logging.debug("Draw sprite (located at 0x%04x) at pos %d/%d" % (self.i, x, y))
         for i in range(0, n):
             row = self.memory[self.i + i]
             for j in range(1, 9):
