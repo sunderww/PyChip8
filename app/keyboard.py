@@ -22,7 +22,6 @@ class Keyboard:
         self.pressed_keys[key] = down
     
     def is_key_pressed(self, key: Key) -> bool:
-        logging.info(self.pressed_keys)
         return self.pressed_keys.get(key, False)
     
     def get_pressed_key(self) -> Optional[Key]:
