@@ -517,8 +517,9 @@ class CPU:
             Stores from V0 to VX (including VX) in memory, starting at address I. 
             The offset from I is increased by 1 for each value written, but I itself is left unmodified.
         """
-        reg = (opcode & 0xF00) >> 8
-        logging.debug("opcode_LD_reg_to_mem not implemented")
+        max_reg = (opcode & 0xF00) >> 8
+        for i in range(0, max_reg+1):
+            self.memory[self.i + i] = self.registers[i]
 
     def opcode_LD_mem_to_reg(self, opcode: int) -> None:
         """ 
@@ -526,5 +527,6 @@ class CPU:
             Fills from V0 to VX (including VX) with values from memory, starting at address I. 
             The offset from I is increased by 1 for each value written, but I itself is left unmodified
         """
-        reg = (opcode & 0xF00) >> 8
-        logging.debug("opcode_LD_mem_to_reg not implemented")
+        max_reg = (opcode & 0xF00) >> 8
+        for i in range(0, max_reg+1):
+            self.registers[i] = self.memory[self.i + i]

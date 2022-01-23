@@ -420,7 +420,42 @@ class TestCPUOpcodes(unittest.TestCase):
         self.assertEqual(self.cpu.memory[0x400], 2)
         self.assertEqual(self.cpu.memory[0x401], 1)
         self.assertEqual(self.cpu.memory[0x402], 3)
+    
+    def test_LD_reg_to_mem(self):
+        self.cpu.registers[0x0] = 0xA0
+        self.cpu.registers[0x1] = 0x11
+        self.cpu.registers[0xA] = 0xAA
+        self.cpu.registers[0xF] = 0xFF
+        self.cpu.i = 0x800
+        self.cpu.opcode_LD_reg_to_mem(0xF055)
+        self.assertEqual(self.cpu.memory[0x800], 0xA0)
+        self.assertEqual(self.cpu.memory[0x801], 0, "LD_reg_to_mem should stop at VX")
+        self.assertEqual(self.cpu.i, 0x800, "LD_reg_to_mem should not change the value of i")
+        
+        self.cpu.registers[0] = 0x10
+        self.cpu.opcode_LD_reg_to_mem(0xFF55)
+        self.assertEqual(self.cpu.memory[0x800], 0x10)
+        self.assertEqual(self.cpu.memory[0x801], 0x11)
+        self.assertEqual(self.cpu.memory[0x80A], 0xAA)
+        self.assertEqual(self.cpu.memory[0x80F], 0xFF)
+        self.assertEqual(self.cpu.memory[0x810], 0x0, "LD_reg_to_mem should stop at VX")
+    
+    def test_LD_mem_to_reg(self):
+        self.cpu.memory[0xAAA] = 0xAA
+        self.cpu.memory[0xAAB] = 0xBB
+        self.cpu.memory[0xAAC] = 0
+        self.cpu.memory[0xAAD] = 0x30
+        self.cpu.i = 0xAAA
+        # Set some registers to test that registers are overwritten and not added etc...
+        self.cpu.registers[0] = 20
+        self.cpu.registers[3] = 90
 
+        self.cpu.opcode_LD_mem_to_reg(0xF365)
+        self.assertEqual(self.cpu.registers[0], 0xAA)
+        self.assertEqual(self.cpu.registers[1], 0xBB)
+        self.assertEqual(self.cpu.registers[2], 0)
+        self.assertEqual(self.cpu.registers[3], 0x30)
+        self.assertEqual(self.cpu.i, 0xAAA, "LD_mem_to_reg should not change the value of i")
 
 
 
