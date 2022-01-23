@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import Mock, call, patch
+from app.constants import SPRITE_BYTE_SIZE
 
 from app.cpu import CPU
 from app.engine.pyglet_engine_handler import PygletEngineHandler
@@ -339,6 +340,88 @@ class TestCPUOpcodes(unittest.TestCase):
         self.assertEqual(self.cpu.renderer.render.call_count, 2, "renderer.render() should be called only once per DRW call")
         calls = [call(Vector2(self.cpu.registers[9]+x, self.cpu.registers[8])) for x in range(0, 8)]
         self.cpu.renderer.toggle_pixel.assert_has_calls(calls, any_order=True)
+
+    def test_SKP(self):
+        self.cpu._increment_pc = Mock(wraps=self.cpu._increment_pc)
+        self.cpu.registers[0x9] = 30
+        self.cpu.registers[0xE] = 10
+
+        self.cpu.keyboard.is_key_pressed = Mock(return_value=False)
+        self.cpu.opcode_SKP(0xE99E)
+        self.cpu.keyboard.is_key_pressed.assert_called_once_with(30)
+        self.cpu._increment_pc.assert_not_called()
+
+        self.cpu.keyboard.is_key_pressed = Mock(return_value=True)
+        self.cpu.opcode_SKP(0xEE9E)
+        self.cpu.keyboard.is_key_pressed.assert_called_once_with(10)
+        self.cpu._increment_pc.assert_called_once()
+    
+    def test_SKNP(self):
+        self.cpu._increment_pc = Mock(wraps=self.cpu._increment_pc)
+        self.cpu.registers[0x9] = 30
+        self.cpu.registers[0xE] = 10
+
+        self.cpu.keyboard.is_key_pressed = Mock(return_value=True)
+        self.cpu.opcode_SKNP(0xE9A1)
+        self.cpu.keyboard.is_key_pressed.assert_called_once_with(30)
+        self.cpu._increment_pc.assert_not_called()
+
+        self.cpu.keyboard.is_key_pressed = Mock(return_value=False)
+        self.cpu.opcode_SKNP(0xEEA1)
+        self.cpu.keyboard.is_key_pressed.assert_called_once_with(10)
+        self.cpu._increment_pc.assert_called_once()
+    
+    def test_LD_dt_in_reg(self):
+        self.cpu.delay_timer = 0xBE
+        self.cpu.registers[0xA] = 0x30
+        self.cpu.opcode_LD_dt_in_reg(0xFA07)
+        self.assertEqual(self.cpu.registers[0xA], 0xBE)
+    
+    def test_LD_key(self):
+        self.cpu.opcode_LD_key(0xFB0A)
+        self.assertEqual(self.cpu.wait_for_key_reg, 0xB)
+        # Check that it is actually blocking
+        self.cpu.update_timers = Mock()
+        self.cpu.handle_sound = Mock()
+        self.cpu.execute_cycle = Mock()
+        self.cpu.update()
+        self.cpu.update_timers.assert_not_called()
+        self.cpu.handle_sound.assert_not_called()
+        self.cpu.execute_cycle.assert_not_called()
+    
+    def test_LD_reg_in_st(self):
+        self.cpu.registers[5] = 130
+        self.cpu.opcode_LD_reg_in_st(0xF515)
+        self.assertEqual(self.cpu.sound_timer, 130)
+    
+    def test_ADD_i(self):
+        self.cpu.i = 0xF0
+        self.cpu.registers[8] = 3
+        self.cpu.registers[5] = 0x21
+        self.cpu.opcode_ADD_i(0xF81E)
+        self.assertEqual(self.cpu.i, 0xF3)
+        # Check that VF is never set
+        self.assertEqual(self.cpu.registers[0xF], 0, "ADD should never set VF")
+        self.cpu.opcode_ADD_i(0xF51E)
+        self.assertEqual(self.cpu.registers[0xF], 0, "ADD should never set VF")
+    
+    def test_LD_i_char_sprite(self):
+        self.cpu.registers[9] = 0xE
+        self.cpu.registers[2] = 3
+        self.cpu.opcode_LD_i_char_sprite(0xF929)
+        self.assertEqual(self.cpu.i, 0xE * SPRITE_BYTE_SIZE)
+        self.cpu.opcode_LD_i_char_sprite(0xF229)
+        self.assertEqual(self.cpu.i, 3 * SPRITE_BYTE_SIZE)
+    
+    def test_LD_bcd(self):
+        self.cpu.i = 0x400
+        self.cpu.registers[3] = 213
+        self.cpu.opcode_LD_bcd(0xF333)
+        self.assertEqual(self.cpu.memory[0x400], 2)
+        self.assertEqual(self.cpu.memory[0x401], 1)
+        self.assertEqual(self.cpu.memory[0x402], 3)
+
+
 
 
 if __name__ == '__main__':
