@@ -5,6 +5,7 @@ from app.constants import SPRITE_BYTE_SIZE
 from app.cpu import CPU
 from app.engine.pyglet_engine_handler import PygletEngineHandler
 from app.engine.vector2 import Vector2
+from app.key import Key
 from app.keyboard import Keyboard
 
 from app.renderer import Renderer
@@ -342,32 +343,32 @@ class TestCPUOpcodes(unittest.TestCase):
 
     def test_SKP(self):
         self.cpu._increment_pc = Mock(wraps=self.cpu._increment_pc)
-        self.cpu.registers[0x9] = 30
-        self.cpu.registers[0xE] = 10
+        self.cpu.registers[0x9] = 0xE
+        self.cpu.registers[0xE] = 0
 
         self.cpu.keyboard.is_key_pressed = Mock(return_value=False)
         self.cpu.opcode_SKP(0xE99E)
-        self.cpu.keyboard.is_key_pressed.assert_called_once_with(30)
+        self.cpu.keyboard.is_key_pressed.assert_called_once_with(Key.E)
         self.cpu._increment_pc.assert_not_called()
 
         self.cpu.keyboard.is_key_pressed = Mock(return_value=True)
         self.cpu.opcode_SKP(0xEE9E)
-        self.cpu.keyboard.is_key_pressed.assert_called_once_with(10)
+        self.cpu.keyboard.is_key_pressed.assert_called_once_with(Key.ZERO)
         self.cpu._increment_pc.assert_called_once()
     
     def test_SKNP(self):
         self.cpu._increment_pc = Mock(wraps=self.cpu._increment_pc)
-        self.cpu.registers[0x9] = 30
-        self.cpu.registers[0xE] = 10
+        self.cpu.registers[0x9] = 0xE
+        self.cpu.registers[0xE] = 0
 
         self.cpu.keyboard.is_key_pressed = Mock(return_value=True)
         self.cpu.opcode_SKNP(0xE9A1)
-        self.cpu.keyboard.is_key_pressed.assert_called_once_with(30)
+        self.cpu.keyboard.is_key_pressed.assert_called_once_with(Key.E)
         self.cpu._increment_pc.assert_not_called()
 
         self.cpu.keyboard.is_key_pressed = Mock(return_value=False)
         self.cpu.opcode_SKNP(0xEEA1)
-        self.cpu.keyboard.is_key_pressed.assert_called_once_with(10)
+        self.cpu.keyboard.is_key_pressed.assert_called_once_with(Key.ZERO)
         self.cpu._increment_pc.assert_called_once()
     
     def test_LD_dt_in_reg(self):
