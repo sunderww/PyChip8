@@ -298,7 +298,6 @@ class TestCPUOpcodes(unittest.TestCase):
             self.cpu.opcode_RND(0xC41A) # 0x1A == 26 == 0b11010
             self.assertEqual(self.cpu.registers[0x4], 0b10010)
 
-    # TODO: should add test cases to test the renderer wrapping capability
     def test_DRW(self):
         # You have to use the actual function to test the ability to set VF correctly
         self.cpu.renderer.toggle_pixel = Mock(wraps=self.cpu.renderer.toggle_pixel)

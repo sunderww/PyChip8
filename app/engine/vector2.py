@@ -14,6 +14,18 @@ class Vector2:
         else:
             return None
     
+    def __add__(self, other: Vector2) -> Vector2:
+        if isinstance(other, Vector2):
+            return Vector2(self.x + other.x, self.y + other.y)
+        else:
+            return None
+
+    def __sub__(self, other: Vector2) -> Vector2:
+        if isinstance(other, Vector2):
+            return Vector2(self.x - other.x, self.y - other.y)
+        else:
+            return None
+    
     def __hash__(self) -> int:
         return hash((self.x, self.y))
     
